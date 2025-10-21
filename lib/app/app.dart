@@ -1,6 +1,6 @@
-// import Flutter widgets 
+// import Flutter widgets necessary for building/running App 
 import 'package:flutter/material.dart';
-// WordleScreen import tba
+import 'package:flutter_application_wordle_1/wordle/views/wordle_screen.dart';
 
 // Main app
 class App extends StatelessWidget {

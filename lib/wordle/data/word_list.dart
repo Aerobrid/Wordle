@@ -1,0 +1,22 @@
+const List<String> fiveLetterWords = [
+  'apple', 'brave', 'charm', 'dream', 'eagle',
+  'flame', 'grape', 'haste', 'ideal', 'jolly',
+  'knock', 'lemon', 'mango', 'noble', 'ocean',
+  'pride', 'queen', 'rival', 'shine', 'trace',
+  'union', 'vivid', 'whale', 'xenon', 'young',
+  'zebra', 'adore', 'blink', 'crisp', 'daisy',
+  'elite', 'fancy', 'glove', 'heart', 'inbox',
+  'jumps', 'karma', 'light', 'magic', 'novel',
+  'olive', 'peace', 'quiet', 'roast', 'sugar',
+  'trend', 'upper', 'vocal', 'witty', 'xylol',
+  'yield', 'azure', 'beach', 'cabin', 'delta',
+  'frost', 'giant', 'honey', 'irony', 'jelly',
+  'koala', 'lucky', 'model', 'nurse', 'orbit',
+  'piano', 'quilt', 'rider', 'smile', 'toast',
+  'ultra', 'vigor', 'woven', 'worry', 'xenon',
+  'yacht', 'zesty', 'amber', 'bloom', 'coral',
+  'dwell', 'feast', 'gloom', 'habit', 'input',
+  'jewel', 'knife', 'lunar', 'medal', 'nerdy',
+  'optic', 'punch', 'quack', 'razor', 'sunny',
+  'thorn', 'vapor', 'weird', 'youth', 'zonal'
+];
