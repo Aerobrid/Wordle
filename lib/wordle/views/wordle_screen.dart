@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_wordle_1/app/app_colors.dart';
 import 'package:flutter_application_wordle_1/wordle/wordle.dart';
 import 'package:flutter_application_wordle_1/wordle/data/word_list.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 enum GameStatus {playing, submitting, lost, won}
 
@@ -17,6 +18,9 @@ class WordleScreen extends StatefulWidget {
 
 class _WordleScreenState extends State<WordleScreen> {
   GameStatus _gameStatus = GameStatus.playing;
+
+  // Loaded dictionary for validation
+  Set<String>? _validWords;
 
   final List<Word> _board = List.generate(
     6,
@@ -41,6 +45,22 @@ class _WordleScreenState extends State<WordleScreen> {
   
   // for letters guessed
   final Set<Letter> _keyboardLetters = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWordList();
+  }
+
+  Future<void> _loadWordList() async {
+    final data = await rootBundle.loadString('assets/words_5.txt');
+    final words = data
+        .split(RegExp(r'\r?\n'))
+        .map((e) => e.trim().toLowerCase())
+        .where((e) => e.length == 5 && RegExp(r'^[a-z]+$').hasMatch(e))
+        .toSet();
+    setState(() => _validWords = words);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,6 +109,30 @@ class _WordleScreenState extends State<WordleScreen> {
   Future<void> _onEnterTapped() async {
     // only submit if playing game, all 5 letters filled, and you still have a try
     if (_gameStatus == GameStatus.playing && _currentWord != null && !_currentWord!.letters.contains(Letter.empty())) {
+      // guard
+      if (_validWords == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Loading word list...'), duration: Duration(seconds: 2)),
+        );
+        return;
+      }
+      // check if word submitted is not a validword and give appropriate msg
+      final guessedWord = _currentWord!.wordString.toLowerCase();
+      if (!_validWords!.contains(guessedWord)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            dismissDirection: DismissDirection.none,
+            duration: const Duration(seconds: 2),
+            backgroundColor: finalTryColor,
+            content: Text(
+              'Entry is not a valid word',
+              style: const TextStyle(color: Colors.white),
+              )
+            ),
+          );
+        return;
+      }
+
       _gameStatus = GameStatus.submitting;
       
 
