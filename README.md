@@ -69,6 +69,7 @@ The easiest way to run the app without installing Flutter or any dependencies:
 5. **Stop the container**:
    ```bash
    # takes care of stopping and removing container for you
+   # you could also CTRL + C for graceful stop
    docker-compose down
    ```
    Another way to stop container:
