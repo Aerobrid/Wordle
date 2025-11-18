@@ -7,12 +7,14 @@ class Board extends StatelessWidget {
     Key? key,
     required this.board,
     required this.flipCardKeys,
+    this.hardMode = false,
   }) : super(key: key);
 
   // our 6 tries
   final List<Word> board;
   // 6x5 flip animation keys
   final List<List<GlobalKey<FlipCardState>>> flipCardKeys;
+  final bool hardMode;
 
   @override
   Widget build(BuildContext context) {
@@ -43,8 +45,9 @@ class Board extends StatelessWidget {
                               val: letter.val,
                               status: LetterStatus.initial,
                             ),
+                            hardMode: hardMode,
                           ),
-                          back: BoardTile(letter: letter),
+                          back: BoardTile(letter: letter, hardMode: hardMode),
                         )
                       ),
                     )

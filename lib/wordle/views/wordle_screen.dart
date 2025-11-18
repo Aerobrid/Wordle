@@ -1,10 +1,11 @@
 import 'dart:math';
 import 'package:flip_card/flip_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_application_wordle_1/app/app_colors.dart';
 import 'package:flutter_application_wordle_1/wordle/wordle.dart';
 import 'package:flutter_application_wordle_1/wordle/data/word_list.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_application_wordle_1/wordle/widgets/hard_mode_panel.dart';
 
 enum GameStatus {playing, submitting, lost, won}
 
@@ -45,11 +46,27 @@ class _WordleScreenState extends State<WordleScreen> {
   
   // for letters guessed
   final Set<Letter> _keyboardLetters = {};
+  
+  // hard mode toggle - keyboard doesn't show colors, only tiles do
+  bool _hardMode = false;
+  
+  // Track color counts for each completed guess in hard mode
+  // Each entry is a map with 'green', 'yellow', 'black' counts
+  final List<Map<String, int>> _hardModeGuessCounts = [];
+  
+  // Focus node for keyboard input
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     _loadWordList();
+  }
+  
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
   }
 
   Future<void> _loadWordList() async {
@@ -78,18 +95,122 @@ class _WordleScreenState extends State<WordleScreen> {
             letterSpacing: 4,
           ),
         ),
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Board(board: _board, flipCardKeys: _flipCardKeys),
-          Keyboard(
-            onKeyTapped: _onKeyTapped,
-            onDeleteTapped: _onDeleteTapped,
-            onEnterTapped: _onEnterTapped,
-            letters: _keyboardLetters,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                const Text(
+                  'Hard Mode',
+                  style: TextStyle(fontSize: 14),
+                ),
+                const SizedBox(width: 8),
+                Switch(
+                  value: _hardMode,
+                  onChanged: (value) {
+                    setState(() {
+                      _hardMode = value;
+                      if (_hardMode) {
+                        // Clear keyboard colors when enabling hard mode
+                        _keyboardLetters.clear();
+                        // Don't clear _hardModeGuessCounts - preserve history
+                      } else {
+                        // Don't clear hard mode counts - preserve history when toggling
+                        // Restore keyboard colors from all previous guesses
+                        _restoreKeyboardColors();
+                      }
+                    });
+                  },
+                ),
+              ],
+            ),
           ),
         ],
+      ),
+      body: RawKeyboardListener(
+        autofocus: true,
+        focusNode: _focusNode,
+        onKey: (event) {
+          // Only handle key down events
+          if (event is! RawKeyDownEvent) {
+            return;
+          }
+          
+          if (_gameStatus == GameStatus.playing) {
+            final keyLabel = event.logicalKey.keyLabel;
+            
+            // Handle letter keys (A-Z)
+            if (keyLabel.length == 1) {
+              final key = keyLabel.toUpperCase();
+              if (key.length == 1 && key.codeUnitAt(0) >= 65 && key.codeUnitAt(0) <= 90) {
+                _onKeyTapped(key);
+                return;
+              }
+            }
+            
+            // Handle Enter key
+            if (keyLabel == 'Enter') {
+              _onEnterTapped();
+              return;
+            }
+            
+            // Handle Backspace/Delete
+            if (keyLabel == 'Backspace' || keyLabel == 'Delete') {
+              _onDeleteTapped();
+              return;
+            }
+          }
+        },
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final boardColumn = Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Board(board: _board, flipCardKeys: _flipCardKeys, hardMode: _hardMode),
+                Keyboard(
+                  onKeyTapped: _onKeyTapped,
+                  onDeleteTapped: _onDeleteTapped,
+                  onEnterTapped: _onEnterTapped,
+                  letters: _keyboardLetters,
+                ),
+              ],
+            );
+
+            if (!_hardMode) return Center(child: boardColumn);
+
+            // Calculate panel offset dynamically to align with first board row
+            // This ensures alignment works in both windowed and fullscreen
+            final mediaQuery = MediaQuery.of(context);
+            final screenHeight = mediaQuery.size.height;
+            final appBarHeight = kToolbarHeight + mediaQuery.padding.top;
+            final availableHeight = screenHeight - appBarHeight;
+            
+            // Board dimensions (exact measurements)
+            const tileHeight = 48.0;                                  // 48px is height of board tile
+            const boardHeight = 6 * tileHeight;                       // 288px total
+            const keyboardHeight = 180.0;                             // 180px total   
+            const totalContentHeight = boardHeight + keyboardHeight;  // 468px total
+            
+            // Calculate where the first board row actually is (centered layout)
+            final centerY = availableHeight / 2;
+            final contentTop = centerY - (totalContentHeight / 2);
+            
+            // Panel has 12px top padding, so offset panel to align its content with first row
+            final panelOffset = (contentTop - 12.0).clamp(0.0, double.infinity);
+
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                boardColumn,
+                Padding(
+                  padding: EdgeInsets.only(top: panelOffset),
+                  child: HardModePanel(guessCounts: _hardModeGuessCounts),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -155,13 +276,16 @@ class _WordleScreenState extends State<WordleScreen> {
         });
 
         // is letter already guessed?
-        final letter = _keyboardLetters.firstWhere(
-          (e) => e.val == currentWordLetter.val,
-          orElse: () => Letter.empty(),
-        );
-        if (letter.status != LetterStatus.correct) {
-          _keyboardLetters.removeWhere((e) => e.val == currentWordLetter.val);
-          _keyboardLetters.add(_currentWord!.letters[i]);
+        // In hard mode, don't update keyboard colors - only show tile colors
+        if (!_hardMode) {
+          final letter = _keyboardLetters.firstWhere(
+            (e) => e.val == currentWordLetter.val,
+            orElse: () => Letter.empty(),
+          );
+          if (letter.status != LetterStatus.correct) {
+            _keyboardLetters.removeWhere((e) => e.val == currentWordLetter.val);
+            _keyboardLetters.add(_currentWord!.letters[i]);
+          }
         }
 
         // trigger the flip animation
@@ -170,6 +294,35 @@ class _WordleScreenState extends State<WordleScreen> {
           () => _flipCardKeys[_currentWordIndex][i].currentState?.toggleCard(),
         );
       }
+
+      // Calculate color counts for hard mode panel (always track, even when hard mode is off)
+      int greenCount = 0;
+      int yellowCount = 0;
+      int blackCount = 0;
+      
+      for (var letter in _currentWord!.letters) {
+        switch (letter.status) {
+          case LetterStatus.correct:
+            greenCount++;
+            break;
+          case LetterStatus.inWord:
+            yellowCount++;
+            break;
+          case LetterStatus.notInWord:
+            blackCount++;
+            break;
+          default:
+            break;
+        }
+      }
+      
+      setState(() {
+        _hardModeGuessCounts.add({
+          'green': greenCount,
+          'yellow': yellowCount,
+          'black': blackCount,
+        });
+      });
 
       _checkIfWinOrLoss();
     }
@@ -218,6 +371,37 @@ class _WordleScreenState extends State<WordleScreen> {
     _currentWordIndex += 1;
   }
 
+  // Restore keyboard colors from all completed guesses
+  void _restoreKeyboardColors() {
+    _keyboardLetters.clear();
+    // Go through all completed guesses and update keyboard colors
+    for (int i = 0; i < _currentWordIndex && i < _board.length; i++) {
+      final word = _board[i];
+      for (var letter in word.letters) {
+        if (letter.status != LetterStatus.initial) {
+          final existingLetter = _keyboardLetters.firstWhere(
+            (e) => e.val == letter.val,
+            orElse: () => Letter.empty(),
+          );
+          // Only update if letter doesn't exist or if new status is better (correct > inWord > notInWord)
+          if (existingLetter == Letter.empty()) {
+            _keyboardLetters.add(letter);
+          } else {
+            // Update if new status is better
+            if (letter.status == LetterStatus.correct) {
+              _keyboardLetters.removeWhere((e) => e.val == letter.val);
+              _keyboardLetters.add(letter);
+            } else if (letter.status == LetterStatus.inWord && 
+                       existingLetter.status == LetterStatus.notInWord) {
+              _keyboardLetters.removeWhere((e) => e.val == letter.val);
+              _keyboardLetters.add(letter);
+            }
+          }
+        }
+      }
+    }
+  }
+
   // when wanting to play another game
   void _restart() {
     setState(() {
@@ -243,6 +427,8 @@ class _WordleScreenState extends State<WordleScreen> {
           ),
         );
       _keyboardLetters.clear();
+      _hardModeGuessCounts.clear();
+      // Hard mode persists across games
     });
   }
 }

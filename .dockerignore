@@ -1,0 +1,39 @@
+# Build artifacts
+build/
+.dart_tool/
+*.iml
+*.log
+.pub-cache/
+.pub/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Version control
+.git/
+.gitignore
+
+# Platform-specific (not needed for web build)
+android/
+ios/
+linux/
+macos/
+windows/
+test/
+
+// ignore this one if you want to include the README.md file in the Docker image
+# README.md
+
+# Docker files themselves (optional, recommended not to include)
+# Dockerfile
+# .dockerignore
+# docker-compose.yml
+
+# Other stuff
+*.md
+.DS_Store
+Thumbs.db
+

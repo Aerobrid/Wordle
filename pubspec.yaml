@@ -58,6 +58,7 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  # load word list from assets (included at runtime)
   assets:
     - assets/words_5.txt
 

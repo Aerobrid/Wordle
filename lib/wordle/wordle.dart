@@ -5,3 +5,4 @@ export 'views/wordle_screen.dart';
 export 'widgets/board.dart';
 export 'widgets/board_tile.dart';
 export 'widgets/keyboard.dart';
+export 'widgets/hard_mode_panel.dart';
