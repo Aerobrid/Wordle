@@ -3,11 +3,11 @@ import 'package:flutter_application_wordle_1/wordle/wordle.dart';
 
 class BoardTile extends StatelessWidget {
   const BoardTile({
-    Key? key,
+    super.key,
     // each tile has a letter
     required this.letter,
     this.hardMode = false,
-  }) : super(key: key);
+  });
 
   final Letter letter;
   final bool hardMode;

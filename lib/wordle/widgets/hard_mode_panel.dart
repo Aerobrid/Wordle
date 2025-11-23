@@ -4,7 +4,7 @@ import 'package:flutter_application_wordle_1/wordle/wordle.dart';
 
 class HardModePanel extends StatelessWidget {
   const HardModePanel({
-    Key? key,
+    super.key,
     required this.guessCounts,
     this.backgroundColor,
     this.borderColor,
@@ -15,7 +15,7 @@ class HardModePanel extends StatelessWidget {
     this.yellowColor,
     this.blackColor,
     this.badgeTextColor,
-  }) : super(key: key);
+  });
 
   // List of color counts for each completed guess
   // Each entry is a map with 'green', 'yellow', 'black' counts
@@ -135,11 +135,11 @@ class HardModePanel extends StatelessWidget {
 
 class _CountBadge extends StatelessWidget {
   const _CountBadge({
-    Key? key,
+    super.key,
     required this.color,
     required this.count,
     required this.textColor,
-  }) : super(key: key);
+  });
 
   final Color color;
   final int count;

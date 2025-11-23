@@ -11,12 +11,12 @@ const _qwerty = <List<String>>[
 class Keyboard extends StatelessWidget {
   // const constructor takes optional, default, and required parameters
   const Keyboard({
-    Key? key,
+    super.key,
     required this.onKeyTapped,
     required this.onDeleteTapped,
     required this.onEnterTapped,
     required this.letters,
-  }) : super(key: key);
+  });
 
   // when letter key is tapped
   final void Function(String) onKeyTapped;
@@ -62,13 +62,12 @@ class Keyboard extends StatelessWidget {
 
 class _KeyboardButton extends StatelessWidget {
   const _KeyboardButton({
-    Key? key,
-    this.height = 48,
+    super.key,
     this.width = 30,
     required this.onTap,
     required this.backgroundColor,
     required this.letter,
-  }) : super(key: key);
+  });
 
   // factory constructors for delete and enter keys using callback
   factory _KeyboardButton.delete({ required VoidCallback onTap }) =>
@@ -87,7 +86,7 @@ class _KeyboardButton extends StatelessWidget {
         letter: 'ENTER',
       );
 
-  final double height;
+  final double height = 40;
   final double width;
   final VoidCallback onTap;
   final Color backgroundColor;

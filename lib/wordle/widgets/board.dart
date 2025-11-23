@@ -4,11 +4,11 @@ import 'package:flip_card/flip_card.dart';
 
 class Board extends StatelessWidget {
   const Board({
-    Key? key,
+    super.key,
     required this.board,
     required this.flipCardKeys,
     this.hardMode = false,
-  }) : super(key: key);
+  });
 
   // our 6 tries
   final List<Word> board;

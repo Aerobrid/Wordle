@@ -5,16 +5,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_application_wordle_1/app/app_colors.dart';
 import 'package:flutter_application_wordle_1/wordle/wordle.dart';
 import 'package:flutter_application_wordle_1/wordle/data/word_list.dart';
-import 'package:flutter_application_wordle_1/wordle/widgets/hard_mode_panel.dart';
 
 enum GameStatus {playing, submitting, lost, won}
 
 // since game changes over time it is mutable
 class WordleScreen extends StatefulWidget {
-  const WordleScreen({ Key? key }) : super(key: key);
+  const WordleScreen({ super.key });
 
-  @override 
-  _WordleScreenState createState() => _WordleScreenState();
+  @override
+  State<WordleScreen> createState() => _WordleScreenState();
 }
 
 class _WordleScreenState extends State<WordleScreen> {
@@ -127,18 +126,18 @@ class _WordleScreenState extends State<WordleScreen> {
           ),
         ],
       ),
-      body: RawKeyboardListener(
+      body: KeyboardListener(
         autofocus: true,
         focusNode: _focusNode,
-        onKey: (event) {
+        onKeyEvent: (event) {
           // Only handle key down events
-          if (event is! RawKeyDownEvent) {
+          if (event is! KeyDownEvent) {
             return;
           }
-          
+
           if (_gameStatus == GameStatus.playing) {
             final keyLabel = event.logicalKey.keyLabel;
-            
+
             // Handle letter keys (A-Z)
             if (keyLabel.length == 1) {
               final key = keyLabel.toUpperCase();
@@ -147,13 +146,13 @@ class _WordleScreenState extends State<WordleScreen> {
                 return;
               }
             }
-            
+
             // Handle Enter key
             if (keyLabel == 'Enter') {
               _onEnterTapped();
               return;
             }
-            
+
             // Handle Backspace/Delete
             if (keyLabel == 'Backspace' || keyLabel == 'Delete') {
               _onDeleteTapped();
